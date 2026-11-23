@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NUST — Zero-G Academic Universe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Space Grotesk, Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for subtle optional cosmic sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --bg-void: #04060d;
+            --accent-orbit: #06b6d4;
+            --accent-attract: #8b5cf6;
+            --accent-repel: #f59e0b;
+            --accent-zerog: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-void);
+            font-family: 'Inter', sans-serif;
+            color: #f8fafc;
+            touch-action: none;
+        }
+
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Deep Cosmic Void & Radial Nebula Gradients */
+        #space-backdrop {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 25%, rgba(88, 28, 135, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 80% 75%, rgba(14, 116, 144, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.92) 0%, #030408 100%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Background Canvas for Stars, Flying Words, Tethers & Shockwaves */
+        #cosmos-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Interactive Stage Holding Floating NUST Cards */
+        #universe-stage {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        /* Glassmorphic HUD Panels */
+        .glass-panel {
+            background: rgba(10, 14, 26, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
+        }
+
+        /* Floating NUST School / Research Card */
+        .nust-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            will-change: transform;
+            background: rgba(13, 18, 34, 0.76);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 1.25rem;
+            box-shadow:
+                0 12px 32px -8px rgba(0, 0, 0, 0.78),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            cursor: grab;
+            overflow: hidden;
+        }
+
+        .nust-card:hover {
+            border-color: rgba(255, 255, 255, 0.36);
+            box-shadow:
+                0 18px 45px -5px rgba(0, 0, 0, 0.88),
+                0 0 24px -4px rgba(6, 182, 212, 0.38);
+            z-index: 25 !important;
+        }
+
+        .nust-card.is-dragging {
+            cursor: grabbing;
+            border-color: #38bdf8;
+            box-shadow: 0 25px 50px -12px rgba(56, 189, 248, 0.5);
+            z-index: 35 !important;
+        }
+
+        .nust-card.is-pinned {
+            border-color: rgba(250, 204, 21, 0.7);
+            box-shadow: 0 0 24px rgba(250, 204, 21, 0.25);
+        }
+
+        /* Bold High-Contrast Styling for Research & Innovation Flagships */
+        .nust-card.is-research-bold {
+            background: linear-gradient(145deg, rgba(16, 26, 48, 0.92) 0%, rgba(11, 34, 44, 0.88) 100%);
+            border: 1.5px solid rgba(251, 191, 36, 0.6);
+            box-shadow:
+                0 16px 40px -6px rgba(0, 0, 0, 0.88),
+                0 0 28px -4px rgba(251, 191, 36, 0.34),
+                inset 0 1px 0 0 rgba(251, 191, 36, 0.35);
+        }
+
+        .nust-card.is-research-bold:hover {
+            border-color: #fbbf24;
+            box-shadow:
+                0 22px 50px -5px rgba(0, 0, 0, 0.92),
+                0 0 36px -2px rgba(34, 211, 238, 0.45);
+        }
+
+        /* Animated Telemetry Bars inside Research Cards */
+        @keyframes pulseBar {
+            0%, 100% { transform: scaleY(0.45); opacity: 0.7; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        .telemetry-bar {
+            transform-origin: bottom;
+            animation: pulseBar 1.7s ease-in-out infinite;
+        }
+
+        /* Spinning Gravity Well Cursor Reticle */
+        #gravity-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 140px;
+            height: 140px;
+            margin-left: -70px;
+            margin-top: -70px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 15;
+            will-change: transform;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .cursor-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px dashed rgba(6, 182, 212, 0.55);
+            animation: spinSlow 14s linear infinite;
+            transition: border-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .cursor-core {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #000 35%, var(--cursor-color, #06b6d4) 80%, transparent 100%);
+            box-shadow: 0 0 20px 4px var(--cursor-color, rgba(6, 182, 212, 0.65));
+            transition: all 0.25s ease;
+        }
+
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Levitating Top Navbar */
+        @keyframes headerLevitate {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(3px); }
+        }
+
+        .header-levitate {
+            animation: headerLevitate 5.5s ease-in-out infinite;
+        }
+
+        /* Notification Bell Ringing Animation */
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(15deg); }
+            40% { transform: rotate(-13deg); }
+            60% { transform: rotate(9deg); }
+            80% { transform: rotate(-6deg); }
+        }
+
+        .bell-ring {
+            animation: bellRing 0.7s ease-in-out;
+        }
+
+        /* Toast Drop Animation */
+        @keyframes toastDrop {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast-item {
+            animation: toastDrop 0.3s ease forwards;
+        }
+
+        /* Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.14);
+            height: 5px;
+            border-radius: 999px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Clean Scrollbar for Sector Pills & Modals */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cosmic Space Backdrop -->
+    <div id="space-backdrop"></div>
+
+    <!-- Starfield, Flying Keywords, Tether Lines & Shockwaves Canvas -->
+    <canvas id="cosmos-canvas"></canvas>
+
+    <!-- Spinning Gravity Well Cursor Reticle -->
+    <div id="gravity-cursor" class="hidden md:flex">
+        <div class="cursor-ring" id="cursor-ring"></div>
+        <div class="cursor-core" id="cursor-core"></div>
+    </div>
+
+    <!-- Interactive Zero-G Stage for Floating NUST Cards -->
+    <main id="universe-stage"></main>
+
+    <!-- =========================================================
+         TOP LEVITATING NAVBAR + NOTIFICATIONS + SECTOR FILTERS
+    ========================================================== -->
+    <header class="header-levitate fixed top-4 left-4 right-4 z-40 flex flex-col gap-2.5 pointer-events-none">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+            <!-- Brand & Antigravity Liftoff Pill -->
+            <div class="glass-panel pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-2xl">
+                <div class="relative flex h-3 w-3 shrink-0">
+                    <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                </div>
+
+                <div>
+                    <h1 class="font-display text-xs sm:text-sm md:text-base font-bold tracking-tight text-white flex items-center gap-2 flex-wrap">
+                        <span>NUST // ZERO-G UNIVERSE</span>
+                        <span id="liftoff-badge" class="font-mono-code text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            LIFTOFF IN 5s
+                        </span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400 hidden lg:block">
+                        National University of Sciences &amp; Technology &bull; Drag cards, bend gravity, or click void for shockwave
+                    </p>
+                </div>
+
+                <div class="h-5 w-[1px] bg-white/10 hidden sm:block"></div>
+
+                <!-- Live Notification Bell & Dropdown Bulletin Drawer -->
+                <div class="relative">
+                    <button id="bell-btn" title="NUST Live Bulletins" class="relative p-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-200 transition-all active:scale-95">
+                        <svg id="bell-icon" class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span id="notif-badge" class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-violet-500 text-white font-mono-code text-[10px] font-bold flex items-center justify-center">
+                            3
+                        </span>
+                    </button>
+
+                    <!-- Dropdown Bulletin Drawer -->
+                    <div id="notif-drawer" class="hidden absolute left-0 sm:left-auto sm:right-0 mt-3 w-80 sm:w-96 glass-panel rounded-2xl p-4 border border-white/15 z-50">
+                        <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/10">
+                            <span class="font-display text-xs font-bold tracking-wide text-white uppercase">NUST Live Bulletins</span>
+                            <div class="flex items-center gap-2">
+                                <button id="ping-alert-btn" class="px-2.5 py-1 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/30 font-mono-code text-[10px]">
+                                    + New Alert
+                                </button>
+                                <button id="clear-notifs-btn" class="text-slate-400 hover:text-white text-[10px] font-mono-code">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div id="notif-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top-Right Action Buttons -->
+            <div class="pointer-events-auto flex items-center gap-2">
+                <button id="audio-btn" class="glass-panel hover:bg-white/10 active:scale-95 transition-all p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-medium">
+                    <span id="audio-label">Sonify: Off</span>
+                </button>
+
+                <button id="open-word-btn" class="glass-panel hover:bg-cyan-500/20 border-cyan-500/40 active:scale-95 transition-all px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-cyan-200">
+                    + Launch Word
+                </button>
+
+                <button id="open-card-btn" class="glass-panel hover:bg-violet-600/30 border-violet-500/40 active:scale-95 transition-all px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-white">
+                    + Spawn Node
+                </button>
+            </div>
+        </div>
+
+        <!-- Sector Filter Pills -->
+        <div class="pointer-events-auto self-start glass-panel px-2 py-1.5 rounded-xl flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full">
+            <button data-sector="FEATURED" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code font-semibold bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 whitespace-nowrap transition-all">
+                FEATURED ORBIT
+            </button>
+            <button data-sector="RESEARCH" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code font-semibold text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 whitespace-nowrap transition-all">
+                ⚡ RESEARCH &amp; INNOVATION
+            </button>
+            <button data-sector="ENG" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code text-cyan-300 hover:bg-cyan-500/15 border border-transparent whitespace-nowrap transition-all">
+                ENGINEERING &amp; IT
+            </button>
+            <button data-sector="SCI" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code text-violet-300 hover:bg-violet-500/15 border border-transparent whitespace-nowrap transition-all">
+                SCIENCES &amp; HEALTH
+            </button>
+            <button data-sector="BIZ" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code text-emerald-300 hover:bg-emerald-500/15 border border-transparent whitespace-nowrap transition-all">
+                BUSINESS, LAW &amp; ARTS
+            </button>
+            <button data-sector="ALL" class="sector-btn px-2.5 py-1 rounded-lg text-[11px] font-mono-code text-slate-300 hover:bg-white/10 border border-transparent whitespace-nowrap transition-all">
+                ALL 18+ SCHOOLS
+            </button>
+        </div>
+
+        <!-- Live Pop-Out Toast Alert Container -->
+        <div id="toast-box" class="pointer-events-none fixed top-[118px] left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md flex flex-col gap-2"></div>
+    </header>
+
+    <!-- =========================================================
+         BOTTOM FLOATING PHYSICS CONTROL DOCK
+    ========================================================== -->
+    <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-2xl pointer-events-none">
+        <div class="glass-panel pointer-events-auto rounded-2xl p-2 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+            
+            <!-- Gravity Mode Buttons -->
+            <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 w-full sm:w-auto justify-between sm:justify-start">
+                <button data-mode="orbit" class="mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    Orbit
+                </button>
+                <button data-mode="attract" class="mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5 border border-transparent">
+                    <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                    Black Hole
+                </button>
+                <button data-mode="repel" class="mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5 border border-transparent">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    Repel
+                </button>
+                <button data-mode="drift" class="mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5 border border-transparent">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Zero-G
+                </button>
+            </div>
+
+            <!-- Mass Slider, Shockwave & Reset -->
+            <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto px-1">
+                <div class="flex items-center gap-2 flex-1 sm:flex-initial">
+                    <label for="gravity-slider" class="font-mono-code text-[11px] text-slate-400">MASS</label>
+                    <input id="gravity-slider" type="range" min="0.2" max="2.5" step="0.1" value="1.1" class="w-full sm:w-24">
+                    <span id="gravity-val" class="font-mono-code text-[11px] text-slate-300 w-7 text-right">1.1x</span>
+                </div>
+
+                <div class="h-4 w-[1px] bg-white/10"></div>
+
+                <button id="shockwave-btn" title="Trigger Radial Shockwave" class="p-2 rounded-xl bg-white/5 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 transition-all active:scale-90">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </button>
+
+                <button id="reset-btn" title="Reset Orbit" class="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all active:scale-90">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================
+         MODAL 1: INSPECT SCHOOL / RESEARCH NODE
+    ========================================================== -->
+    <div id="inspect-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/65 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 relative border border-white/15">
+            <button id="close-inspect-btn" class="absolute top-5 right-5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 text-xs">✕</button>
+
+            <span id="inspect-tag" class="inline-block px-3 py-1 rounded-full text-xs font-mono-code mb-3">TAG</span>
+            <h2 id="inspect-title" class="font-display text-2xl sm:text-3xl font-bold text-white mb-1">Title</h2>
+            <p id="inspect-meta" class="font-mono-code text-xs text-cyan-400 mb-3">CAMPUS • SECTOR</p>
+            <p id="inspect-desc" class="text-slate-300 text-sm leading-relaxed mb-4">Description</p>
+
+            <!-- Structured Programs, Flagship Labs & Key Metrics -->
+            <div class="space-y-2.5 p-3.5 rounded-2xl bg-white/5 border border-white/10 mb-4 text-xs">
+                <div>
+                    <span class="font-mono-code text-[10px] text-amber-300 uppercase block">Programs &amp; Focus Areas</span>
+                    <p id="inspect-programs" class="text-white font-medium mt-0.5">—</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-white/10">
+                    <div>
+                        <span class="font-mono-code text-[10px] text-cyan-300 uppercase block">Flagship Labs &amp; Centers</span>
+                        <p id="inspect-labs" class="text-slate-200 mt-0.5">—</p>
+                    </div>
+                    <div>
+                        <span class="font-mono-code text-[10px] text-emerald-300 uppercase block">Impact &amp; Metrics</span>
+                        <p id="inspect-metrics" class="text-emerald-200 font-semibold mt-0.5">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Physics Telemetry -->
+            <div class="grid grid-cols-3 gap-3 p-3 rounded-2xl bg-black/40 border border-white/5 mb-5 font-mono-code text-xs">
+                <div>
+                    <span class="text-slate-500 block text-[10px]">MASS</span>
+                    <span id="inspect-mass" class="text-slate-200">1.4 M☉</span>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[10px]">SPEED</span>
+                    <span id="inspect-speed" class="text-cyan-400">0.00 px/f</span>
+                </div>
+                <div>
+                    <span class="text-slate-500 block text-[10px]">COORDINATES</span>
+                    <span id="inspect-pos" class="text-slate-200">0, 0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <button id="inspect-word-btn" class="px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-medium">
+                    Launch Keyword ↑
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="inspect-pin-btn" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-amber-500/20 text-slate-200 text-xs font-medium">
+                        Anchor Node
+                    </button>
+                    <button id="inspect-fling-btn" class="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-medium">
+                        Fling Away
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 2: SPAWN CUSTOM NUST NODE
+    ========================================================== -->
+    <div id="card-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/65 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-md rounded-3xl p-6 relative border border-white/15">
+            <button id="close-card-btn" class="absolute top-5 right-5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 text-xs">✕</button>
+            <h2 class="font-display text-xl font-bold text-white mb-1">Spawn NUST Orbit Node</h2>
+            <p class="text-xs text-slate-400 mb-4">Launch a custom society, research lab, or campus note into zero-gravity.</p>
+
+            <form id="card-form" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Title</label>
+                    <input id="card-title-input" type="text" required maxlength="40" placeholder="e.g., NUST Formula Student Team" class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Sector Classification</label>
+                    <select id="card-category-input" class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500">
+                        <option value="RESEARCH">⚡ Research &amp; Innovation (Gold Bold)</option>
+                        <option value="ENG">Engineering &amp; IT (Cyan)</option>
+                        <option value="SCI">Sciences &amp; Health (Violet)</option>
+                        <option value="BIZ">Business, Law &amp; Arts (Emerald)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Summary</label>
+                    <textarea id="card-desc-input" required rows="3" maxlength="220" placeholder="Describe the lab, school, or campus project..." class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-violet-500 resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium text-sm">
+                    Launch into Orbit
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 3: LAUNCH CUSTOM FLOATING KEYWORD
+    ========================================================== -->
+    <div id="word-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/65 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-6 relative border border-white/15">
+            <button id="close-word-btn" class="absolute top-5 right-5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 text-xs">✕</button>
+            <h2 class="font-display text-xl font-bold text-white mb-1">Launch NUST Keyword</h2>
+            <p class="text-xs text-slate-400 mb-4">Release a glowing word into the zero-gravity sky stream.</p>
+
+            <form id="word-form" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Keyword</label>
+                    <input id="word-text-input" type="text" required maxlength="22" placeholder="e.g., SEECS-AI" class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white uppercase focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Glow Hue</label>
+                    <select id="word-color-input" class="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-400">
+                        <option value="0">Electric Cyan</option>
+                        <option value="1">Nebula Violet</option>
+                        <option value="2">Solar Amber</option>
+                        <option value="3">Emerald Mint</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium text-sm">
+                    Release into Sky ↑
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // 1. GLOBAL VARIABLES & NUST DATASET
+        // =========================================================
+        const canvas = document.getElementById("cosmos-canvas");
+        const ctx = canvas.getContext("2d");
+        const stage = document.getElementById("universe-stage");
+        const cursorEl = document.getElementById("gravity-cursor");
+        const cursorRing = document.getElementById("cursor-ring");
+        const cursorCore = document.getElementById("cursor-core");
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+
+        let cards = [];
+        let stars = [];
+        let floatingWords = [];
+        let shockwaves = [];
+
+        let gravityMode = "orbit"; // "orbit" | "attract" | "repel" | "drift"
+        let gravityPower = 1.1;
+        let activeSector = "FEATURED";
+        let antiGravityActive = false;
+        let countdown = 5;
+
+        let selectedCard = null;
+        let draggedCard = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let dragTrail = [];
+
+        let audioOn = false;
+        let synth = null;
+
+        const mouse = { x: width / 2, y: height / 2, vx: 0, vy: 0, active: false };
+
+        // Sector Styling Tokens
+        const SECTOR_STYLES = {
+            RESEARCH: { label: "⚡ RESEARCH & INNOVATION", bg: "rgba(245, 158, 11, 0.22)", text: "#fde68a", border: "rgba(251, 191, 36, 0.55)", dot: "#fbbf24" },
+            ENG: { label: "ENGINEERING & IT", bg: "rgba(6, 182, 212, 0.16)", text: "#67e8f9", border: "rgba(6, 182, 212, 0.35)", dot: "#22d3ee" },
+            SCI: { label: "SCIENCES & HEALTH", bg: "rgba(139, 92, 246, 0.18)", text: "#c4b5fd", border: "rgba(139, 92, 246, 0.35)", dot: "#a78bfa" },
+            BIZ: { label: "BUSINESS, LAW & ARTS", bg: "rgba(16, 185, 129, 0.18)", text: "#6ee7b7", border: "rgba(16, 185, 129, 0.35)", dot: "#34d399" }
+        };
+
+        // Complete NUST Data: Bold Research Flagships + All 18+ Schools & Constituent Campuses
+        const NUST_NODES = [
+            // --- BOLD RESEARCH & INNOVATION FLAGSHIPS ---
+            {
+                sector: "RESEARCH",
+                featured: true,
+                isResearchBold: true,
+                title: "NSTP — Science & Tech Park",
+                meta: "H-12 ISLAMABAD • PAKISTAN'S FIRST HI-TECH SEZ",
+                summary: "Flagship innovation ecosystem uniting 120+ deep-tech startups, R&D anchors, Hatch 8 incubators, and venture capital.",
+                programs: "Startup Incubation, Corporate R&D Anchors, Venture Acceleration, Tech Commercialization",
+                labs: "NSTP Innovation Hub, Hatch 8 Tech Incubator, FinTech & AgriTech Studios",
+                metrics: "120+ Startups • PKR 6B+ Funding Raised",
+                pulseBadges: ["120+ STARTUPS", "PKR 6B+"],
+                word: "NSTP",
+                mass: 1.8
+            },
+            {
+                sector: "RESEARCH",
+                featured: true,
+                isResearchBold: true,
+                title: "NCAI & NCRA — AI & Robotics Labs",
+                meta: "NATIONAL CENTERS OF AI & ROBOTICS",
+                summary: "Frontier artificial intelligence, autonomous drones, medical imaging diagnostics, and industrial robotics research.",
+                programs: "MS/PhD Artificial Intelligence, Robotics & Intelligent Machines, Computer Vision",
+                labs: "Deep Learning Lab, Medical Imaging Lab, Swarm Robotics & UAV Arena",
+                metrics: "25+ Specialized AI/Robotics Labs • Global Impact",
+                pulseBadges: ["AI LABS", "ROBOTICS"],
+                word: "AI LABS",
+                mass: 1.75
+            },
+            {
+                sector: "RESEARCH",
+                featured: true,
+                isResearchBold: true,
+                title: "ORIC — Patents & Deep-Tech Grants",
+                meta: "OFFICE OF RESEARCH, INNOVATION & COMMERCIALIZATION",
+                summary: "Accelerating intellectual property filing, industrial spin-offs, and PKR 4.2B+ in competitive international R&D grants.",
+                programs: "Technology Transfer Office, Patent Filing Cell, Industrial Consultancy",
+                labs: "Central Prototyping Foundry, IP Licensing Directorate, Horizon/NSF Grants Cell",
+                metrics: "PKR 4.2B+ Grants • 280+ Registered Patents",
+                pulseBadges: ["PKR 4.2B+", "280+ PATENTS"],
+                word: "RESEARCH",
+                mass: 1.7
+            },
+            {
+                sector: "RESEARCH",
+                featured: false,
+                isResearchBold: true,
+                title: "NUST Supercomputing & Quantum Center",
+                meta: "SINES & SNS • HIGH-PERFORMANCE COMPUTING",
+                summary: "High-density GPU clusters, quantum optics simulation, climate modeling, and computational bioinformatics.",
+                programs: "Computational Science & Engineering, Bioinformatics, Quantum Physics",
+                labs: "HPC Supercomputing Cluster, Quantum Optics Lab, Molecular Modeling Lab",
+                metrics: "Teraflop Compute Grid • 25,000+ Publications",
+                pulseBadges: ["SUPERCOMPUTING", "QUANTUM"],
+                word: "INNOVATION",
+                mass: 1.65
+            },
+
+            // --- ENGINEERING & IT SCHOOLS / CAMPUSES ---
+            {
+                sector: "ENG",
+                featured: true,
+                title: "SEECS — Electrical Eng & CS",
+                meta: "H-12 ISLAMABAD • COMPUTING & AI",
+                summary: "Premier school for Computer Science, Software Engineering, Data Science, Cyber Security, and Electrical Engineering.",
+                programs: "BS/MS/PhD CS, Software Engineering, Data Science, AI, Information Security, Electrical Eng",
+                labs: "National Cyber Security Lab, IoT & Embedded Systems Lab, High-Speed Networks Lab",
+                metrics: "QS Top 250 CS & Eng • 98% Employability",
+                word: "SEECS",
+                mass: 1.45
+            },
+            {
+                sector: "ENG",
+                featured: true,
+                title: "SMME — Mechanical & Manufacturing",
+                meta: "H-12 ISLAMABAD • ROBOTICS & BIOMED",
+                summary: "Home to autonomous robotics arenas, biomedical device prototyping, Formula Student racing, and CNC manufacturing.",
+                programs: "BS/MS/PhD Mechanical Engineering, Mechatronics, Robotics, Biomedical Engineering",
+                labs: "RISE Robotics Arena, Biomedical Devices Lab, Formula Student Garage",
+                metrics: "Top Robotics Teams in Asia • 40+ Patents",
+                word: "ROBOTICS",
+                mass: 1.35
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "SCME — Chemical & Materials Eng",
+                meta: "H-12 ISLAMABAD • NANOTECH & ENERGY",
+                summary: "Pioneering nanomaterials, clean battery energy storage, catalytic reaction engineering, and advanced metallurgy.",
+                programs: "BS/MS/PhD Chemical Engineering, Metallurgy & Materials Engineering, Nanoscience",
+                labs: "Nanomaterials Synthesis Lab, Fuel Cell & Battery Lab, Process Simulation Lab",
+                metrics: "High-Impact Materials Journals • Clean Energy IP",
+                word: "SCME",
+                mass: 1.25
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "NICE & SCEE — Civil & Environmental",
+                meta: "H-12 ISLAMABAD • NICE • IGIS • IESE",
+                summary: "Comprising NICE (Civil), IGIS (Geo-Informatics), and IESE (Environmental Engineering) for smart resilient cities.",
+                programs: "BS/MS/PhD Civil Engineering, Environmental Engineering, Geoinformatics & Remote Sensing",
+                labs: "Shake-Table Structural Lab, Satellite GIS Lab, Water Treatment Lab",
+                metrics: "Mega-Infrastructure Consultancy • GIS Hub",
+                word: "NICE-SCEE",
+                mass: 1.25
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "SINES — Interdisciplinary Eng & Sciences",
+                meta: "H-12 ISLAMABAD • SYSTEMS & MODELING",
+                summary: "Bridging computational modeling, systems engineering, bioinformatics, and applied mathematical sciences.",
+                programs: "MS/PhD Computational Science & Engineering, Bioinformatics, Systems Engineering",
+                labs: "Systems Modeling Lab, Computational Biology Lab, High-Performance Cluster",
+                metrics: "Cross-Disciplinary R&D • National Simulation Hub",
+                word: "SINES",
+                mass: 1.2
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "CEME — College of E&ME",
+                meta: "RAWALPINDI CAMPUS • COMPUTER & MECHATRONICS",
+                summary: "Historic engineering powerhouse specializing in Computer Engineering, Mechatronics, Electrical, and Mechanical Eng.",
+                programs: "BS/MS/PhD Computer, Electrical, Mechanical & Mechatronics Engineering",
+                labs: "Control Systems Lab, CAD/CAM Manufacturing Center, Embedded Vision Lab",
+                metrics: "60+ Years Legacy • Premier R&D Alumni",
+                word: "CEME",
+                mass: 1.3
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "MCS — Military College of Signals",
+                meta: "RAWALPINDI CAMPUS • TELECOM & CYBER",
+                summary: "Center of excellence in Telecommunications, Information Security, Cryptography, and Software Engineering.",
+                programs: "BS/MS/PhD Software Engineering, Information Security, Telecom Engineering",
+                labs: "Cryptography & Cyber Defense Lab, Wireless Communications Lab",
+                metrics: "National Cyber Security Pioneers",
+                word: "MCS",
+                mass: 1.2
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "CAE — College of Aeronautical Eng",
+                meta: "RISALPUR CAMPUS • AEROSPACE & AVIONICS",
+                summary: "Leading aerospace and avionics engineering institution with wind tunnels, propulsion testbeds, and flight simulation.",
+                programs: "BE/MS/PhD Aerospace Engineering, Avionics Engineering",
+                labs: "Subsonic Wind Tunnel, Jet Propulsion Lab, Avionics Radar & Flight Sim Lab",
+                metrics: "PEC Accredited • Premier Aviation R&D",
+                word: "CAE",
+                mass: 1.25
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "PNEC — Pakistan Navy Eng College",
+                meta: "KARACHI CAMPUS • NAVAL & INDUSTRIAL ENG",
+                summary: "Coastal engineering campus offering Mechanical, Electrical, Naval Architecture, and Management Information Systems.",
+                programs: "BE/MS Mechanical, Electrical, Naval Architecture, BS Management Info Systems",
+                labs: "Marine Propulsion Lab, Thermo-Fluids Lab, Industrial Automation Center",
+                metrics: "Maritime & Industrial Engineering Excellence",
+                word: "PNEC",
+                mass: 1.25
+            },
+            {
+                sector: "ENG",
+                featured: false,
+                title: "MCE — Military College of Engineering",
+                meta: "RISALPUR CAMPUS • DISASTER & CIVIL ENG",
+                summary: "Specializing in Civil Engineering, Geotech, Transportation, and Disaster Management for resilient national infrastructure.",
+                programs: "BE/MS/PhD Civil Engineering, Disaster Management, Structural Engineering",
+                labs: "Geotechnical Testing Lab, Hydraulics & Hydrology Lab, Disaster Sim Center",
+                metrics: "75+ Years of Civil Engineering Heritage",
+                word: "MCE",
+                mass: 1.2
+            },
+
+            // --- SCIENCES & HEALTH SCHOOLS ---
+            {
+                sector: "SCI",
+                featured: true,
+                title: "ASAB — Applied Biosciences",
+                meta: "H-12 ISLAMABAD • BIOTECH & GENOMICS",
+                summary: "Leading center for Molecular Biology, Healthcare & Plant Biotechnology, Virology, and Diagnostic Kit development.",
+                programs: "BS/MS/PhD Applied Biosciences, Healthcare Biotechnology, Industrial Biotech",
+                labs: "BSL-3 Virology & Diagnostics Lab, Plant Genomics Greenhouse, Neurobiology Lab",
+                metrics: "Indigenous Diagnostic Kits • 300+ Biotech Papers",
+                word: "ASAB",
+                mass: 1.3
+            },
+            {
+                sector: "SCI",
+                featured: false,
+                title: "SNS — School of Natural Sciences",
+                meta: "H-12 ISLAMABAD • PHYSICS, MATH & CHEM",
+                summary: "Foundational excellence in Theoretical Physics, Pure & Applied Mathematics, and Analytical Chemistry.",
+                programs: "BS/MS/PhD Mathematics, Physics, Chemistry",
+                labs: "Quantum Optics & Laser Lab, Computational Algebra Group, Spectroscopy Lab",
+                metrics: "Top Ranked Physics & Math Faculty • CERN Links",
+                word: "SNS",
+                mass: 1.15
+            },
+            {
+                sector: "SCI",
+                featured: false,
+                title: "NSHS — School of Health Sciences",
+                meta: "H-12 ISLAMABAD • MBBS & CLINICAL CARE",
+                summary: "Modern medical education integrating clinical medicine, digital health, and translational biomedical research.",
+                programs: "MBBS, BS Allied Health Sciences, Clinical & Translational Research",
+                labs: "Digital Anatomy & Simulation Center, Clinical Skills Labs, Teaching Hospital",
+                metrics: "PMDC Accredited • Digital Health Curriculum",
+                word: "NSHS",
+                mass: 1.3
+            },
+
+            // --- BUSINESS, SOCIAL SCIENCES, LAW & ARTS ---
+            {
+                sector: "BIZ",
+                featured: true,
+                title: "NBS — NUST Business School",
+                meta: "H-12 ISLAMABAD • BBA, MBA & FINTECH",
+                summary: "Developing entrepreneurial leaders, financial analysts, and global policy strategists through case-method learning.",
+                programs: "BBA, BS Accounting & Finance, BS Tourism & Hospitality, MBA, EMBA, PhD",
+                labs: "Bloomberg Financial Markets Lab, Entrepreneurship Studio, Case Amphitheaters",
+                metrics: "NBEAC W-Category • #1 Business School in PK",
+                word: "NBS",
+                mass: 1.25
+            },
+            {
+                sector: "BIZ",
+                featured: false,
+                title: "S3H — Social Sciences & Humanities",
+                meta: "H-12 ISLAMABAD • ECONOMICS & PSYCHOLOGY",
+                summary: "Driving public policy, behavioral sciences, mass communication, and development economics research.",
+                programs: "BS Economics, Mass Communication, Clinical Psychology, Public Administration",
+                labs: "Behavioral Psychology Clinic, Digital Broadcast Studio, Policy Think-Tank",
+                metrics: "National Policy Advisory • Award-Winning Media",
+                word: "S3H",
+                mass: 1.1
+            },
+            {
+                sector: "BIZ",
+                featured: false,
+                title: "SADA — Art, Design & Architecture",
+                meta: "H-12 ISLAMABAD • B.ARCH & INDUSTRIAL DESIGN",
+                summary: "Creative studios blending sustainable architecture, product design, urbanism, and digital fabrication.",
+                programs: "Bachelor of Architecture (B.Arch), Bachelor of Industrial Design (BID)",
+                labs: "Digital Fabrication & Laser Workshop, Architecture Studios, Exhibition Gallery",
+                metrics: "PCATP Accredited • National Design Awards",
+                word: "SADA",
+                mass: 1.15
+            },
+            {
+                sector: "BIZ",
+                featured: false,
+                title: "NLS — NUST Law School",
+                meta: "H-12 ISLAMABAD • LLB & CYBER LAW",
+                summary: "Modern legal scholarship specializing in Corporate Law, Intellectual Property, Cyber Law, and International Arbitration.",
+                programs: "5-Year LLB (Hons), Corporate & Technology Law Clinics",
+                labs: "Moot Courtroom Arena, Legal Aid & IP Clinic, Constitutional Research Center",
+                metrics: "PBC Recognized • International Moot Champions",
+                word: "NLS-LAW",
+                mass: 1.1
+            }
+        ];
+
+        // Floating Campus Keywords
+        const CAMPUS_WORDS = [
+            "NUST", "INNOVATION", "SEECS", "NSTP", "ROBOTICS",
+            "NET-2026", "RESEARCH", "AI LABS", "EXCELLENCE", "ISLAMABAD",
+            "SMME", "ASAB", "NBS", "SADA", "S3H", "SCME", "SINES", "NSHS"
+        ];
+
+        const WORD_COLORS = [
+            { text: "#67e8f9", bg: "rgba(6, 182, 212, 0.14)", border: "rgba(34, 211, 238, 0.42)" },
+            { text: "#c4b5fd", bg: "rgba(139, 92, 246, 0.14)", border: "rgba(167, 139, 250, 0.42)" },
+            { text: "#fcd34d", bg: "rgba(245, 158, 11, 0.16)", border: "rgba(251, 191, 36, 0.46)" },
+            { text: "#6ee7b7", bg: "rgba(16, 185, 129, 0.14)", border: "rgba(52, 211, 153, 0.42)" }
+        ];
+
+        // Live Bulletins
+        let notifications = [
+            { id: 1, tag: "RESEARCH HUB", title: "NSTP & NCAI Innovation Flagships Live", desc: "120+ startups, 280+ patents & PKR 4.2B+ grants orbiting in Zero-G." },
+            { id: 2, tag: "ALL 18+ SCHOOLS", title: "Complete NUST Schools & Campuses Loaded", desc: "Filter by Research, Engineering, Sciences, Business, or All 18+ Schools." },
+            { id: 3, tag: "ANTIGRAVITY", title: "Zero-G Keyword Liftoff Armed (5s)", desc: "Floating NUST keywords will lift off into weightless space automatically." }
+        ];
+
+        // =========================================================
+        // 2. CANVAS SETUP (STARS, FLYING WORDS, SHOCKWAVES)
+        // =========================================================
+        function resizeScreen() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.8 + 0.3,
+                    alpha: Math.random() * 0.75 + 0.15
+                });
+            }
+        }
+
+        function createFloatingWords() {
+            floatingWords = [];
+            for (let i = 0; i < 18; i++) {
+                const wordText = CAMPUS_WORDS[i % CAMPUS_WORDS.length];
+                floatingWords.push(makeWordObject(wordText, Math.random() * width, Math.random() * height, false));
+            }
+        }
+
+        function makeWordObject(text, x, y, isExtra, colorIndex = null) {
+            const color = colorIndex !== null
+                ? WORD_COLORS[colorIndex % WORD_COLORS.length]
+                : WORD_COLORS[Math.floor(Math.random() * WORD_COLORS.length)];
+
+            return {
+                text: text.toUpperCase(),
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 1.2,
+                vy: isExtra ? -2.6 : (Math.random() - 0.5) * 0.5,
+                liftSpeed: 1.0 + Math.random() * 1.4,
+                angle: (Math.random() - 0.5) * 0.22,
+                spin: (Math.random() - 0.5) * 0.015,
+                color: color,
+                isExtra: isExtra,
+                life: isExtra ? 260 : 999999
+            };
+        }
+
+        function launchWord(text, x = width / 2, y = height * 0.6, colorIndex = null) {
+            const word = makeWordObject(text, x, y, true, colorIndex);
+            if (antiGravityActive) word.vy = -3.2;
+            floatingWords.push(word);
+        }
+
+        // =========================================================
+        // 3. CREATE, FILTER & INTERACT WITH NUST CARDS
+        // =========================================================
+        function buildAllCards() {
+            stage.innerHTML = "";
+            cards = [];
+            NUST_NODES.forEach((item) => addCardToSpace(item));
+            applySectorFilter(activeSector);
+        }
+
+        function addCardToSpace(data, customX = null, customY = null) {
+            const style = SECTOR_STYLES[data.sector] || SECTOR_STYLES.ENG;
+            const el = document.createElement("article");
+            el.className = "nust-card p-4 sm:p-5" + (data.isResearchBold ? " is-research-bold" : "");
+            el.style.width = Math.min(data.isResearchBold ? 275 : 250, width - 36) + "px";
+
+            let researchFooter = "";
+            if (data.isResearchBold && data.pulseBadges) {
+                researchFooter = `
+                    <div class="mt-3 pt-2.5 border-t border-amber-400/25 flex items-center justify-between gap-2">
+                        <div class="flex items-end gap-1 h-4">
+                            <span class="telemetry-bar w-1 h-3 rounded-full bg-amber-400" style="animation-delay:0s"></span>
+                            <span class="telemetry-bar w-1 h-4 rounded-full bg-cyan-400" style="animation-delay:0.25s"></span>
+                            <span class="telemetry-bar w-1 h-2.5 rounded-full bg-emerald-400" style="animation-delay:0.5s"></span>
+                            <span class="telemetry-bar w-1 h-4 rounded-full bg-amber-300" style="animation-delay:0.75s"></span>
+                        </div>
+                        <div class="flex items-center gap-1.5 font-mono-code text-[10px] font-bold">
+                            <span class="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300">${data.pulseBadges[0]}</span>
+                            <span class="px-2 py-0.5 rounded bg-cyan-400/20 text-cyan-300">${data.pulseBadges[1]}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            el.innerHTML = `
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-code font-semibold"
+                          style="background:${style.bg}; color:${style.text}; border:1px solid ${style.border}">
+                        <span class="w-1.5 h-1.5 rounded-full" style="background:${style.dot}"></span>
+                        ${style.label}
+                    </span>
+                    <span class="pin-badge hidden text-amber-400 text-xs">📌</span>
+                </div>
+                <h3 class="font-display text-base sm:text-lg font-bold text-white leading-snug mb-1">${data.title}</h3>
+                <p class="text-xs text-slate-300 leading-relaxed line-clamp-3">${data.summary}</p>
+                ${researchFooter}
+            `;
+
+            stage.appendChild(el);
+
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.min(width, height) * (0.14 + Math.random() * 0.28);
+
+            const cardObj = {
+                ...data,
+                el: el,
+                x: customX !== null ? customX : width / 2 + Math.cos(angle) * radius - 125,
+                y: customY !== null ? customY : height / 2 + Math.sin(angle) * radius - 80,
+                vx: -Math.sin(angle) * 0.5,
+                vy: Math.cos(angle) * 0.5,
+                width: el.offsetWidth || 255,
+                height: el.offsetHeight || 155,
+                mass: data.mass || 1.2,
+                rotation: (Math.random() - 0.5) * 4,
+                pinned: false,
+                visible: true
+            };
+
+            setupCardDragAndClick(cardObj);
+            cards.push(cardObj);
+            return cardObj;
+        }
+
+        function applySectorFilter(sector) {
+            activeSector = sector;
+
+            document.querySelectorAll(".sector-btn").forEach((btn) => {
+                if (btn.dataset.sector === sector) {
+                    btn.classList.add("bg-white/15", "text-white", "border-white/30");
+                } else {
+                    btn.classList.remove("bg-white/15", "text-white", "border-white/30");
+                }
+            });
+
+            cards.forEach((card) => {
+                let show = false;
+                if (sector === "ALL") show = true;
+                else if (sector === "FEATURED") show = Boolean(card.featured);
+                else show = card.sector === sector;
+
+                card.visible = show;
+                card.el.style.display = show ? "block" : "none";
+
+                if (show) {
+                    card.vx += (Math.random() - 0.5) * 3;
+                    card.vy += (Math.random() - 0.5) * 3;
+                }
+            });
+        }
+
+        function setupCardDragAndClick(card) {
+            let downTime = 0;
+            let downX = 0;
+            let downY = 0;
+
+            const onStart = (e) => {
+                e.stopPropagation();
+                const pt = e.touches ? e.touches[0] : e;
+                downTime = Date.now();
+                downX = pt.clientX;
+                downY = pt.clientY;
+
+                draggedCard = card;
+                dragOffsetX = pt.clientX - card.x;
+                dragOffsetY = pt.clientY - card.y;
+                dragTrail = [{ x: pt.clientX, y: pt.clientY, t: downTime }];
+
+                card.vx = 0;
+                card.vy = 0;
+                card.el.classList.add("is-dragging");
+            };
+
+            card.el.addEventListener("mousedown", onStart);
+            card.el.addEventListener("touchstart", onStart, { passive: true });
+
+            card.onRelease = (upX, upY) => {
+                const elapsed = Date.now() - downTime;
+                const dist = Math.hypot(upX - downX, upY - downY);
+                if (elapsed < 250 && dist < 8) {
+                    openInspectModal(card);
+                }
+            };
+        }
+
+        // =========================================================
+        // 4. SHOCKWAVES & 5-SECOND AUTOMATIC ANTIGRAVITY LIFTOFF
+        // =========================================================
+        function triggerShockwave(x, y, power = 16) {
+            shockwaves.push({ x, y, radius: 10, maxRadius: Math.max(width, height) * 0.55, alpha: 0.9 });
+            playTone("C2", "8n");
+
+            cards.forEach((card) => {
+                if (!card.visible || card.pinned || card === draggedCard) return;
+                const cx = card.x + card.width / 2;
+                const cy = card.y + card.height / 2;
+                const dx = cx - x;
+                const dy = cy - y;
+                const dist = Math.max(40, Math.hypot(dx, dy));
+
+                if (dist < 520) {
+                    const force = ((1 - dist / 520) * power) / Math.sqrt(card.mass);
+                    card.vx += (dx / dist) * force;
+                    card.vy += (dy / dist) * force;
+                }
+            });
+
+            floatingWords.forEach((w) => {
+                const dx = w.x - x;
+                const dy = w.y - y;
+                const dist = Math.max(40, Math.hypot(dx, dy));
+                if (dist < 460) {
+                    const boost = (1 - dist / 460) * 4.2;
+                    w.vx += (dx / dist) * boost * 0.6;
+                    w.vy -= 1.6 + boost;
+                }
+            });
+        }
+
+        function startAntiGravityTimer() {
+            const badge = document.getElementById("liftoff-badge");
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    badge.textContent = `LIFTOFF IN ${countdown}s`;
+                } else {
+                    clearInterval(timer);
+                    engageAntiGravity();
+                }
+            }, 1000);
+        }
+
+        function engageAntiGravity() {
+            if (antiGravityActive) return;
+            antiGravityActive = true;
+
+            const badge = document.getElementById("liftoff-badge");
+            badge.textContent = "ZERO-G ANTIGRAVITY ACTIVE ↑";
+            badge.className = "font-mono-code text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+
+            floatingWords.forEach((w) => {
+                w.vy = -(1.5 + Math.random() * 2.0);
+            });
+
+            triggerShockwave(width / 2, height * 0.6, 14);
+            addNotification("ANTIGRAVITY", "Zero-G Liftoff Engaged!", "All floating NUST keywords are rising weightlessly into Zero-G.");
+        }
+
+        // =========================================================
+        // 5. MAIN 60FPS PHYSICS & CANVAS LOOP
+        // =========================================================
+        function updateLoop() {
+            ctx.clearRect(0, 0, width, height);
+
+            // A. Draw Starfield
+            stars.forEach((s) => {
+                ctx.fillStyle = `rgba(226, 232, 240, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // B. Update & Draw Floating NUST Keywords
+            for (let i = floatingWords.length - 1; i >= 0; i--) {
+                const w = floatingWords[i];
+
+                if (mouse.active) {
+                    const dx = w.x - mouse.x;
+                    const dy = w.y - mouse.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 175 && dist > 1) {
+                        const push = ((175 - dist) / 175) * 0.35;
+                        w.vx += (dx / dist) * push;
+                        w.vy += (dy / dist) * push;
+                    }
+                }
+
+                if (antiGravityActive || gravityMode === "drift") {
+                    w.vy = w.vy * 0.96 - w.liftSpeed * 0.04;
+                    w.vx *= 0.97;
+                    if (!w.isExtra && w.y < -40) {
+                        w.y = height + 35;
+                        w.x = Math.random() * width;
+                        w.vy = -1.2;
+                    }
+                } else if (!w.isExtra) {
+                    if (w.x > width + 100) w.x = -90;
+                    if (w.x < -100) w.x = width + 90;
+                    if (w.y > height + 40) w.y = -30;
+                    if (w.y < -40) w.y = height + 30;
+                }
+
+                w.x += w.vx;
+                w.y += w.vy;
+                w.angle += w.spin;
+
+                if (w.isExtra) {
+                    w.life--;
+                    if (w.life <= 0) {
+                        floatingWords.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                ctx.save();
+                ctx.translate(w.x, w.y);
+                ctx.rotate(w.angle);
+                ctx.font = '600 13px "JetBrains Mono", monospace';
+                const textWidth = ctx.measureText(w.text).width;
+
+                ctx.fillStyle = w.color.bg;
+                ctx.strokeStyle = w.color.border;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(-textWidth / 2 - 12, -13, textWidth + 24, 26, 999);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = w.color.text;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(w.text, 0, 1);
+                ctx.restore();
+            }
+
+            // C. Draw Subtle Gravity Well Field Around Cursor
+            if (mouse.active && gravityMode !== "drift") {
+                const rgb =
+                    gravityMode === "orbit" ? "6, 182, 212" :
+                    gravityMode === "attract" ? "139, 92, 246" : "245, 158, 11";
+                const r = 185 * Math.sqrt(gravityPower);
+                const grad = ctx.createRadialGradient(mouse.x, mouse.y, 6, mouse.x, mouse.y, r);
+                grad.addColorStop(0, `rgba(${rgb}, 0.16)`);
+                grad.addColorStop(1, `rgba(${rgb}, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // D. Draw Expanding Shockwaves
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                const sw = shockwaves[i];
+                sw.radius += 11;
+                sw.alpha = Math.max(0, 1 - sw.radius / sw.maxRadius);
+
+                ctx.strokeStyle = `rgba(125, 211, 252, ${sw.alpha * 0.55})`;
+                ctx.lineWidth = 2.5 * sw.alpha;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                if (sw.radius >= sw.maxRadius) shockwaves.splice(i, 1);
+            }
+
+            // E. Update Visible NUST Cards Physics
+            const pullForce = 0.55 * gravityPower;
+
+            for (let i = 0; i < cards.length; i++) {
+                const a = cards[i];
+                if (!a.visible) continue;
+
+                const acx = a.x + a.width / 2;
+                const acy = a.y + a.height / 2;
+
+                // Soft mutual separation so cards don't overlap completely
+                for (let j = i + 1; j < cards.length; j++) {
+                    const b = cards[j];
+                    if (!b.visible) continue;
+
+                    const bcx = b.x + b.width / 2;
+                    const bcy = b.y + b.height / 2;
+                    const dx = bcx - acx;
+                    const dy = bcy - acy;
+                    const dist = Math.hypot(dx, dy);
+                    const minGap = (a.width + b.width) * 0.45;
+
+                    if (dist > 1 && dist < minGap) {
+                        const push = ((minGap - dist) / minGap) * 0.18;
+                        if (!a.pinned && a !== draggedCard) {
+                            a.vx -= (dx / dist) * push;
+                            a.vy -= (dy / dist) * push;
+                        }
+                        if (!b.pinned && b !== draggedCard) {
+                            b.vx += (dx / dist) * push;
+                            b.vy += (dy / dist) * push;
+                        }
+                    }
+                }
+
+                // Cursor Gravity Well Pull / Orbit / Repel
+                if (mouse.active && gravityMode !== "drift" && !a.pinned && a !== draggedCard) {
+                    const dx = mouse.x - acx;
+                    const dy = mouse.y - acy;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < 420 && dist > 18) {
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        const strength = (pullForce * 140) / Math.max(dist, 85);
+
+                        if (gravityMode === "attract") {
+                            a.vx += nx * strength;
+                            a.vy += ny * strength;
+                        } else if (gravityMode === "orbit") {
+                            const orbitOffset = (dist - 170) / 170;
+                            a.vx += nx * strength * orbitOffset * 0.85 - ny * strength * 0.95;
+                            a.vy += ny * strength * orbitOffset * 0.85 + nx * strength * 0.95;
+                        } else if (gravityMode === "repel") {
+                            a.vx -= nx * strength * 1.4;
+                            a.vy -= ny * strength * 1.4;
+                        }
+
+                        // Gravitational Tether Line
+                        const tetherAlpha = Math.max(0, (1 - dist / 420) * 0.32);
+                        const strokeRGB =
+                            gravityMode === "orbit" ? "34, 211, 238" :
+                            gravityMode === "attract" ? "167, 139, 250" : "251, 191, 36";
+
+                        ctx.strokeStyle = `rgba(${strokeRGB}, ${tetherAlpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(mouse.x, mouse.y);
+                        ctx.lineTo(acx, acy);
+                        ctx.stroke();
+                    }
+                }
+
+                // Velocity Damping & Soft Edge Containment
+                if (!a.pinned && a !== draggedCard) {
+                    a.vx *= 0.985;
+                    a.vy *= 0.985;
+
+                    if (Math.hypot(a.vx, a.vy) < 0.15) {
+                        a.vx += (Math.random() - 0.5) * 0.03;
+                        a.vy += (Math.random() - 0.5) * 0.03;
+                    }
+
+                    a.x += a.vx;
+                    a.y += a.vy;
+
+                    const padX = 16;
+                    const topWall = 112;
+                    const bottomWall = 88;
+
+                    if (a.x < padX) { a.x = padX; a.vx = Math.abs(a.vx) * 0.65; }
+                    if (a.x + a.width > width - padX) { a.x = width - padX - a.width; a.vx = -Math.abs(a.vx) * 0.65; }
+                    if (a.y < topWall) { a.y = topWall; a.vy = Math.abs(a.vy) * 0.65; }
+                    if (a.y + a.height > height - bottomWall) { a.y = height - bottomWall - a.height; a.vy = -Math.abs(a.vy) * 0.65; }
+                }
+
+                a.el.style.transform = `translate3d(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px, 0) rotate(${a.rotation}deg)`;
+            }
+
+            if (selectedCard) {
+                document.getElementById("inspect-speed").textContent = Math.hypot(selectedCard.vx, selectedCard.vy).toFixed(2) + " px/f";
+                document.getElementById("inspect-pos").textContent = `${Math.round(selectedCard.x)}, ${Math.round(selectedCard.y)}`;
+            }
+
+            requestAnimationFrame(updateLoop);
+        }
+
+        // =========================================================
+        // 6. NOTIFICATIONS, MODALS & UI CONTROLS
+        // =========================================================
+        function renderNotifications() {
+            const list = document.getElementById("notif-list");
+            const badge = document.getElementById("notif-badge");
+            badge.textContent = notifications.length;
+            badge.style.display = notifications.length ? "flex" : "none";
+
+            if (notifications.length === 0) {
+                list.innerHTML = `<p class="text-center py-5 text-xs text-slate-400">No active bulletins.</p>`;
+                return;
+            }
+
+            list.innerHTML = notifications.map((n) => `
+                <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span class="font-mono-code text-[10px] text-cyan-400 block">${n.tag}</span>
+                    <h4 class="font-display text-xs font-bold text-white">${n.title}</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5">${n.desc}</p>
+                </div>
+            `).join("");
+        }
+
+        function addNotification(tag, title, desc) {
+            notifications.unshift({ id: Date.now(), tag, title, desc });
+            renderNotifications();
+
+            const bell = document.getElementById("bell-icon");
+            bell.classList.remove("bell-ring");
+            void bell.offsetWidth;
+            bell.classList.add("bell-ring");
+
+            const toastBox = document.getElementById("toast-box");
+            const toast = document.createElement("div");
+            toast.className = "toast-item pointer-events-auto glass-panel rounded-2xl px-4 py-3 border border-cyan-400/35 flex items-center justify-between gap-3";
+            toast.innerHTML = `
+                <div>
+                    <span class="font-mono-code text-[10px] text-cyan-300 block">${tag}</span>
+                    <p class="text-xs font-semibold text-white">${title}</p>
+                </div>
+                <button class="text-slate-400 hover:text-white text-xs">✕</button>
+            `;
+            toast.querySelector("button").onclick = () => toast.remove();
+            toastBox.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        function openInspectModal(card) {
+            selectedCard = card;
+            const style = SECTOR_STYLES[card.sector] || SECTOR_STYLES.ENG;
+
+            const tagEl = document.getElementById("inspect-tag");
+            tagEl.textContent = style.label;
+            tagEl.style.background = style.bg;
+            tagEl.style.color = style.text;
+            tagEl.style.border = `1px solid ${style.border}`;
+
+            document.getElementById("inspect-title").textContent = card.title;
+            document.getElementById("inspect-meta").textContent = card.meta || "NUST ISLAMABAD";
+            document.getElementById("inspect-desc").textContent = card.summary;
+            document.getElementById("inspect-programs").textContent = card.programs || "Undergraduate, Postgraduate & Doctoral Research";
+            document.getElementById("inspect-labs").textContent = card.labs || "Specialized Departmental Laboratories";
+            document.getElementById("inspect-metrics").textContent = card.metrics || "HEC & PEC Accredited Excellence";
+            document.getElementById("inspect-mass").textContent = card.mass.toFixed(1) + " M☉";
+            document.getElementById("inspect-pin-btn").textContent = card.pinned ? "Unanchor Node" : "Anchor Node";
+
+            const modal = document.getElementById("inspect-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            playTone("E4", "16n");
+        }
+
+        function closeInspectModal() {
+            selectedCard = null;
+            const modal = document.getElementById("inspect-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function playTone(note, duration) {
+            if (!audioOn || !synth) return;
+            try { synth.triggerAttackRelease(note, duration); } catch (e) {}
+        }
+
+        // =========================================================
+        // 7. EVENT LISTENERS & INITIALIZATION
+        // =========================================================
+        window.addEventListener("mousemove", (e) => {
+            mouse.vx = e.clientX - mouse.x;
+            mouse.vy = e.clientY - mouse.y;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+            cursorEl.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+
+            if (draggedCard) {
+                draggedCard.x = e.clientX - dragOffsetX;
+                draggedCard.y = e.clientY - dragOffsetY;
+                dragTrail.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+                if (dragTrail.length > 5) dragTrail.shift();
+            }
+        });
+
+        window.addEventListener("touchmove", (e) => {
+            if (!e.touches.length) return;
+            const t = e.touches[0];
+            mouse.x = t.clientX;
+            mouse.y = t.clientY;
+            mouse.active = true;
+            if (draggedCard) {
+                draggedCard.x = t.clientX - dragOffsetX;
+                draggedCard.y = t.clientY - dragOffsetY;
+                dragTrail.push({ x: t.clientX, y: t.clientY, t: Date.now() });
+                if (dragTrail.length > 5) dragTrail.shift();
+            }
+        }, { passive: true });
+
+        function releaseDraggedCard(endX, endY) {
+            if (!draggedCard) return;
+            const card = draggedCard;
+            card.el.classList.remove("is-dragging");
+
+            if (dragTrail.length >= 2) {
+                const first = dragTrail[0];
+                const last = dragTrail[dragTrail.length - 1];
+                const dt = Math.max(16, last.t - first.t);
+                card.vx = Math.max(-22, Math.min(22, ((last.x - first.x) / dt) * 14));
+                card.vy = Math.max(-22, Math.min(22, ((last.y - first.y) / dt) * 14));
+            }
+
+            card.onRelease(endX, endY);
+            draggedCard = null;
+            dragTrail = [];
+        }
+
+        window.addEventListener("mouseup", (e) => releaseDraggedCard(e.clientX, e.clientY));
+        window.addEventListener("touchend", (e) => {
+            const t = e.changedTouches[0];
+            releaseDraggedCard(t ? t.clientX : mouse.x, t ? t.clientY : mouse.y);
+        });
+
+        // Click empty space for shockwave + floating word burst
+        stage.addEventListener("mousedown", (e) => {
+            if (e.target !== stage) return;
+            triggerShockwave(e.clientX, e.clientY, 17 * gravityPower);
+            const word = CAMPUS_WORDS[Math.floor(Math.random() * CAMPUS_WORDS.length)];
+            launchWord(word, e.clientX, e.clientY);
+        });
+
+        // Sector Filter Buttons
+        document.querySelectorAll(".sector-btn").forEach((btn) => {
+            btn.addEventListener("click", () => applySectorFilter(btn.dataset.sector));
+        });
+
+        // Gravity Mode Switcher
+        const MODE_CONFIG = {
+            orbit: { btn: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40", color: "#06b6d4", ring: "rgba(6, 182, 212, 0.55)", dot: "bg-cyan-400" },
+            attract: { btn: "bg-violet-500/20 text-violet-300 border-violet-500/40", color: "#8b5cf6", ring: "rgba(139, 92, 246, 0.55)", dot: "bg-violet-400" },
+            repel: { btn: "bg-amber-500/20 text-amber-300 border-amber-500/40", color: "#f59e0b", ring: "rgba(245, 158, 11, 0.55)", dot: "bg-amber-400" },
+            drift: { btn: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40", color: "#10b981", ring: "rgba(16, 185, 129, 0.45)", dot: "bg-emerald-400" }
+        };
+
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                gravityMode = btn.dataset.mode;
+                const cfg = MODE_CONFIG[gravityMode];
+
+                document.querySelectorAll(".mode-btn").forEach((b) => {
+                    b.className = "mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white border border-transparent flex items-center justify-center gap-1.5";
+                });
+                btn.className = `mode-btn flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center justify-center gap-1.5 ${cfg.btn}`;
+
+                cursorCore.style.setProperty("--cursor-color", cfg.color);
+                cursorRing.style.borderColor = cfg.ring;
+                cursorEl.style.opacity = gravityMode === "drift" ? "0.4" : "1";
+                document.getElementById("status-ping").className = `animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.dot}`;
+                document.getElementById("status-dot").className = `relative inline-flex rounded-full h-3 w-3 ${cfg.dot}`;
+
+                if (gravityMode === "drift") engageAntiGravity();
+            });
+        });
+
+        // Mass Slider, Shockwave & Reset
+        document.getElementById("gravity-slider").addEventListener("input", (e) => {
+            gravityPower = parseFloat(e.target.value);
+            document.getElementById("gravity-val").textContent = gravityPower.toFixed(1) + "x";
+            cursorRing.style.transform = `scale(${0.75 + gravityPower * 0.25})`;
+        });
+
+        document.getElementById("shockwave-btn").addEventListener("click", () => {
+            triggerShockwave(width / 2, height / 2, 22 * gravityPower);
+        });
+
+        document.getElementById("reset-btn").addEventListener("click", () => {
+            buildAllCards();
+            createFloatingWords();
+            triggerShockwave(width / 2, height / 2, 12);
+        });
+
+        // Notification Drawer Controls
+        document.getElementById("bell-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            document.getElementById("notif-drawer").classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const drawer = document.getElementById("notif-drawer");
+            const bell = document.getElementById("bell-btn");
+            if (!drawer.contains(e.target) && !bell.contains(e.target)) {
+                drawer.classList.add("hidden");
+            }
+        });
+
+        document.getElementById("ping-alert-btn").addEventListener("click", () => {
+            addNotification("NUST RESEARCH", "NSTP & NCAI Innovation Milestone", "280+ Patents & 120+ Deep-Tech Startups thriving at NUST H-12.");
+            launchWord("INNOVATION", width / 2, height * 0.55);
+        });
+
+        document.getElementById("clear-notifs-btn").addEventListener("click", () => {
+            notifications = [];
+            renderNotifications();
+        });
+
+        // Sound Toggle
+        document.getElementById("audio-btn").addEventListener("click", () => {
+            audioOn = !audioOn;
+            document.getElementById("audio-label").textContent = audioOn ? "Sonify: On" : "Sonify: Off";
+            if (audioOn && !synth) {
+                Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -16;
+                playTone("G4", "16n");
+            }
+        });
+
+        // Inspect Modal Buttons
+        document.getElementById("close-inspect-btn").addEventListener("click", closeInspectModal);
+        document.getElementById("inspect-word-btn").addEventListener("click", () => {
+            if (!selectedCard) return;
+            launchWord(selectedCard.word || "NUST", width / 2, height * 0.55);
+            closeInspectModal();
+        });
+
+        document.getElementById("inspect-pin-btn").addEventListener("click", () => {
+            if (!selectedCard) return;
+            selectedCard.pinned = !selectedCard.pinned;
+            selectedCard.el.classList.toggle("is-pinned", selectedCard.pinned);
+            selectedCard.el.querySelector(".pin-badge").classList.toggle("hidden", !selectedCard.pinned);
+            document.getElementById("inspect-pin-btn").textContent = selectedCard.pinned ? "Unanchor Node" : "Anchor Node";
+        });
+
+        document.getElementById("inspect-fling-btn").addEventListener("click", () => {
+            if (!selectedCard) return;
+            selectedCard.pinned = false;
+            selectedCard.el.classList.remove("is-pinned");
+            const angle = Math.random() * Math.PI * 2;
+            selectedCard.vx = Math.cos(angle) * 22;
+            selectedCard.vy = Math.sin(angle) * 22;
+            closeInspectModal();
+        });
+
+        // Launch Word Modal
+        const wordModal = document.getElementById("word-modal");
+        document.getElementById("open-word-btn").addEventListener("click", () => {
+            wordModal.classList.remove("hidden");
+            wordModal.classList.add("flex");
+        });
+        document.getElementById("close-word-btn").addEventListener("click", () => {
+            wordModal.classList.add("hidden");
+            wordModal.classList.remove("flex");
+        });
+        document.getElementById("word-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const text = document.getElementById("word-text-input").value.trim();
+            const colorIdx = parseInt(document.getElementById("word-color-input").value, 10);
+            if (text) launchWord(text, width / 2, height * 0.6, colorIdx);
+            e.target.reset();
+            wordModal.classList.add("hidden");
+            wordModal.classList.remove("flex");
+        });
+
+        // Spawn Custom Node Modal
+        const cardModal = document.getElementById("card-modal");
+        document.getElementById("open-card-btn").addEventListener("click", () => {
+            cardModal.classList.remove("hidden");
+            cardModal.classList.add("flex");
+        });
+        document.getElementById("close-card-btn").addEventListener("click", () => {
+            cardModal.classList.add("hidden");
+            cardModal.classList.remove("flex");
+        });
+        document.getElementById("card-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const title = document.getElementById("card-title-input").value.trim();
+            const sector = document.getElementById("card-category-input").value;
+            const summary = document.getElementById("card-desc-input").value.trim();
+
+            if (title && summary) {
+                const isBold = sector === "RESEARCH";
+                addCardToSpace({
+                    sector,
+                    featured: true,
+                    isResearchBold: isBold,
+                    title,
+                    meta: "CUSTOM NUST NODE",
+                    summary,
+                    programs: "Custom Academic / Research Track",
+                    labs: "NUST H-12 Collaborative Studio",
+                    metrics: "Active Orbit Node",
+                    pulseBadges: isBold ? ["NEW R&D", "ACTIVE"] : null,
+                    word: title.split(" ")[0],
+                    mass: 1.35
+                }, width / 2 - 125, height / 2 - 80);
+            }
+            e.target.reset();
+            cardModal.classList.add("hidden");
+            cardModal.classList.remove("flex");
+        });
+
+        window.addEventListener("resize", () => {
+            resizeScreen();
+            createStars();
+        });
+
+        // Boot Everything on Window Load
+        window.onload = function () {
+            resizeScreen();
+            createStars();
+            createFloatingWords();
+            buildAllCards();
+            renderNotifications();
+            startAntiGravityTimer();
+            requestAnimationFrame(updateLoop);
+        };
+    </script>
+</body>
+</html>
